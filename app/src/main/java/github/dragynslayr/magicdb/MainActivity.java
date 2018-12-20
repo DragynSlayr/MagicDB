@@ -2,16 +2,17 @@ package github.dragynslayr.magicdb;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.Window;
+import android.view.View;
 import android.view.WindowManager;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.google.android.gms.vision.CameraSource;
@@ -24,12 +25,13 @@ import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final int PERM_REQ_ID = 101;
+    private static final String TAG = "MagicDB_Main";
     private SurfaceView cameraView;
     private TextView textView;
     private CameraSource cameraSource;
-
-    private static final int PERM_REQ_ID = 101;
-    private static final String TAG = "MagicDB_Main";
+    private LinearLayout actionButtons;
+    private boolean scanning;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +43,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         cameraView = findViewById(R.id.surfaceView);
-        textView = findViewById(R.id.text_view);
+        textView = findViewById(R.id.scanResult);
+        actionButtons = findViewById(R.id.buttonHolder);
+        scanning = true;
 
         startCameraSource();
     }
@@ -106,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void receiveDetections(Detector.Detections<TextBlock> detections) {
                     final SparseArray<TextBlock> items = detections.getDetectedItems();
-                    if (items.size() != 0) {
+                    if (scanning && items.size() != 0) {
                         textView.post(new Runnable() {
                             @Override
                             public void run() {
@@ -114,11 +118,22 @@ public class MainActivity extends AppCompatActivity {
                                 s = s.replace('(', '\0');
                                 s = s.replace(')', '\0');
                                 textView.setText(s);
+                                scanning = false;
+                                actionButtons.setVisibility(View.VISIBLE);
                             }
                         });
                     }
                 }
             });
         }
+    }
+
+    public void acceptCard(View view) {
+
+    }
+
+    public void rejectCard(View view) {
+        scanning = true;
+        actionButtons.setVisibility(View.INVISIBLE);
     }
 }
