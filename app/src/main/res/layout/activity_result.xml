@@ -1,8 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/darkBG"
     tools:context=".ResultActivity">
 
-</android.support.constraint.ConstraintLayout>
+    <TextView
+        android:id="@+id/scannedText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:background="@color/cardTextBorder"
+        android:text="@string/txt_message"
+        android:textAlignment="center"
+        android:textSize="35sp" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/rejectButton"
+        android:layout_below="@id/scannedText"
+        android:background="@color/cardHolderBorder"
+        android:scrollbars="vertical">
+
+        <LinearLayout
+            android:id="@+id/cardHolder"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+    </ScrollView>
+
+    <Button
+        android:id="@+id/rejectButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:background="@color/badButtonBG"
+        android:onClick="reject"
+        android:text="@string/reject"
+        android:textAlignment="center"
+        android:textColor="@color/buttonText" />
+
+</RelativeLayout>

@@ -25,21 +25,25 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
+    public static final String EXTRA_SCANNED = "MagicDB_Scanned";
     public static final String EXTRA_CARDS = "MagicDB_Cards";
 
-    private static final int PERM_REQ_ID = 101, PORT = 19615;
-    private static final String TAG = "MagicDB_Main", IP = "70.72.212.179";
-    private SurfaceView cameraView;
+    private static final String IP = "70.72.212.179";
+    private static final int PORT = 19615;
+
+    private static final String TAG = "MagicDB_Main";
+    private static final int PERM_REQ_ID = 101;
+
     private CameraSource cameraSource;
-    private String scanned = "";
+    private SurfaceView cameraView;
     private Thread searchThread;
-    private boolean scanning = true;
+    private boolean scanning;
+    private String scanned;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,16 +53,21 @@ public class MainActivity extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
 
+        scanning = true;
+        scanned = "";
+
         cameraView = findViewById(R.id.surfaceView);
         searchThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 String[] found = search(scanned);
-                Log.d(TAG, "Served: " + Arrays.toString(found));
                 if (found.length > 0) {
                     Intent intent = new Intent(getApplicationContext(), ResultActivity.class);
+                    intent.putExtra(EXTRA_SCANNED, scanned);
                     intent.putExtra(EXTRA_CARDS, found);
                     startActivity(intent);
+                } else {
+                    scanning = true;
                 }
             }
         });
@@ -83,10 +92,9 @@ public class MainActivity extends AppCompatActivity {
 
     private String[] search(String needle) {
         ArrayList<String> found = new ArrayList<>();
-        Log.d(TAG, "Searching");
         try {
-            InetAddress addr = InetAddress.getByName(IP);
-            Socket socket = new Socket(addr, PORT);
+            InetAddress address = InetAddress.getByName(IP);
+            Socket socket = new Socket(address, PORT);
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
@@ -95,7 +103,6 @@ public class MainActivity extends AppCompatActivity {
             String response = in.readLine();
             if (response != null) {
                 String[] cards = response.split("\n");
-                Log.d(TAG, "Count: " + cards.length);
                 Collections.addAll(found, cards);
             }
 
@@ -106,7 +113,6 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        scanning = true;
         return found.toArray(new String[0]);
     }
 
@@ -127,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
                     .setFacing(CameraSource.CAMERA_FACING_BACK)
                     .setRequestedPreviewSize(1920, 1080)
                     .setAutoFocusEnabled(true)
-                    .setRequestedFps(1.0f)
+                    .setRequestedFps(3.0f)
                     .build();
 
             cameraView.getHolder().addCallback(new SurfaceHolder.Callback() {
@@ -162,8 +168,8 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void receiveDetections(Detector.Detections<TextBlock> detections) {
                     final SparseArray<TextBlock> items = detections.getDetectedItems();
-                    if (items.size() != 0 && scanning) {
-                        scanned = items.valueAt(0).getValue().replace('(', '\0').replace(')', '\0').trim();
+                    if (scanning && items.size() != 0) {
+                        scanned = items.valueAt(0).getValue().replaceAll("[^\\x00-\\x7F]", "").replace('(', '\0').replace(')', '\0').replace(':', '\0').trim();
                         if (isValidCard(scanned)) {
                             Log.d(TAG, "Found: " + scanned);
                             scanning = false;

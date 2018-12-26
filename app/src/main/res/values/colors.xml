@@ -3,8 +3,9 @@
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
-    <color name="red">#FF0000</color>
-    <color name="green">#00FF00</color>
-    <color name="darkGreen">#228822</color>
-    <color name="darkRed">#882222</color>
+    <color name="badButtonBG">#DD2222</color>
+    <color name="buttonText">#DBDBDB</color>
+    <color name="cardTextBorder">#3535FF</color>
+    <color name="cardHolderBorder">#5555FF</color>
+    <color name="darkBG">#757575</color>
 </resources>
