@@ -1,6 +1,7 @@
 package github.dragynslayr.magicdb;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -24,10 +25,13 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
+
+    public static final String EXTRA_CARDS = "MagicDB_Cards";
 
     private static final int PERM_REQ_ID = 101, PORT = 19615;
     private static final String TAG = "MagicDB_Main", IP = "70.72.212.179";
@@ -49,8 +53,13 @@ public class MainActivity extends AppCompatActivity {
         searchThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                ArrayList<String> found = search(scanned);
-                Log.d(TAG, "Served: " + found.toString());
+                String[] found = search(scanned);
+                Log.d(TAG, "Served: " + Arrays.toString(found));
+                if (found.length > 0) {
+                    Intent intent = new Intent(getApplicationContext(), ResultActivity.class);
+                    intent.putExtra(EXTRA_CARDS, found);
+                    startActivity(intent);
+                }
             }
         });
 
@@ -72,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private ArrayList<String> search(String needle) {
+    private String[] search(String needle) {
         ArrayList<String> found = new ArrayList<>();
         Log.d(TAG, "Searching");
         try {
@@ -98,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         scanning = true;
-        return found;
+        return found.toArray(new String[0]);
     }
 
     private boolean isValidCard(String card) {
@@ -154,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
                 public void receiveDetections(Detector.Detections<TextBlock> detections) {
                     final SparseArray<TextBlock> items = detections.getDetectedItems();
                     if (items.size() != 0 && scanning) {
-                        scanned = items.valueAt(0).getValue().replace('(', '\0').replace(')', '\0');
+                        scanned = items.valueAt(0).getValue().replace('(', '\0').replace(')', '\0').trim();
                         if (isValidCard(scanned)) {
                             Log.d(TAG, "Found: " + scanned);
                             scanning = false;
