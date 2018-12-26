@@ -1,67 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/scanLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:weightSum="20"
     tools:context=".MainActivity">
 
     <SurfaceView
         android:id="@+id/surfaceView"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="18" />
-
-    <TextView
-        android:id="@+id/scanResult"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_margin="8dp"
-        android:layout_weight="1"
-        android:gravity="center"
-        android:text="@string/txt_message"
-        android:textColor="@android:color/black"
-        android:textSize="20sp"
-        android:textStyle="bold" />
-
-    <LinearLayout
-        android:id="@+id/buttonHolder"
-        style="?android:attr/buttonBarStyle"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_margin="10dp"
-        android:layout_weight="1"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:visibility="visible">
-
-        <Button
-            android:id="@+id/rejectButton"
-            style="?android:attr/buttonBarButtonStyle"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginEnd="5dp"
-            android:layout_weight="1"
-            android:background="@color/red"
-            android:onClick="rejectCard"
-            android:text="@string/reject"
-            android:textColor="@color/darkRed"
-            android:textSize="15sp" />
-
-        <Button
-            android:id="@+id/acceptButton"
-            style="?android:attr/buttonBarButtonStyle"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginStart="5dp"
-            android:layout_weight="1"
-            android:background="@color/green"
-            android:onClick="acceptCard"
-            android:text="@string/accept"
-            android:textColor="@color/darkGreen"
-            android:textSize="15sp" />
-
-    </LinearLayout>
+        android:layout_height="match_parent" />
 
 </LinearLayout>

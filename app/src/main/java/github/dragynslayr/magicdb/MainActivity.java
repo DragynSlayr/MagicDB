@@ -10,28 +10,32 @@ import android.util.Log;
 import android.util.SparseArray;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.View;
 import android.view.WindowManager;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.text.TextBlock;
 import com.google.android.gms.vision.text.TextRecognizer;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final int PERM_REQ_ID = 101;
-    private static final String TAG = "MagicDB_Main";
+    private static final int PERM_REQ_ID = 101, PORT = 19615;
+    private static final String TAG = "MagicDB_Main", IP = "70.72.212.179";
     private SurfaceView cameraView;
-    private TextView textView;
     private CameraSource cameraSource;
-    private LinearLayout actionButtons;
-    private boolean scanning;
+    private String scanned = "";
+    private Thread searchThread;
+    private boolean scanning = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,13 +43,16 @@ public class MainActivity extends AppCompatActivity {
 
         Objects.requireNonNull(getSupportActionBar()).hide();
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-
         setContentView(R.layout.activity_main);
 
         cameraView = findViewById(R.id.surfaceView);
-        textView = findViewById(R.id.scanResult);
-        actionButtons = findViewById(R.id.buttonHolder);
-        scanning = true;
+        searchThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ArrayList<String> found = search(scanned);
+                Log.d(TAG, "Served: " + found.toString());
+            }
+        });
 
         startCameraSource();
     }
@@ -63,6 +70,42 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
+    }
+
+    private ArrayList<String> search(String needle) {
+        ArrayList<String> found = new ArrayList<>();
+        Log.d(TAG, "Searching");
+        try {
+            InetAddress addr = InetAddress.getByName(IP);
+            Socket socket = new Socket(addr, PORT);
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+            out.print(needle);
+            out.flush();
+            String response = in.readLine();
+            if (response != null) {
+                String[] cards = response.split("\n");
+                Log.d(TAG, "Count: " + cards.length);
+                Collections.addAll(found, cards);
+            }
+
+            in.close();
+            out.close();
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        scanning = true;
+        return found;
+    }
+
+    private boolean isValidCard(String card) {
+        boolean isUpper = !card.toLowerCase().equals(card);
+        boolean isLower = !card.toUpperCase().equals(card);
+        boolean isLong = card.length() >= 4;
+        return (isUpper && isLower && isLong);
     }
 
     private void startCameraSource() {
@@ -110,30 +153,16 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void receiveDetections(Detector.Detections<TextBlock> detections) {
                     final SparseArray<TextBlock> items = detections.getDetectedItems();
-                    if (scanning && items.size() != 0) {
-                        textView.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                String s = items.valueAt(0).getValue();
-                                s = s.replace('(', '\0');
-                                s = s.replace(')', '\0');
-                                textView.setText(s);
-                                scanning = false;
-                                actionButtons.setVisibility(View.VISIBLE);
-                            }
-                        });
+                    if (items.size() != 0 && scanning) {
+                        scanned = items.valueAt(0).getValue().replace('(', '\0').replace(')', '\0');
+                        if (isValidCard(scanned)) {
+                            Log.d(TAG, "Found: " + scanned);
+                            scanning = false;
+                            searchThread.start();
+                        }
                     }
                 }
             });
         }
-    }
-
-    public void acceptCard(View view) {
-
-    }
-
-    public void rejectCard(View view) {
-        scanning = true;
-        actionButtons.setVisibility(View.INVISIBLE);
     }
 }
