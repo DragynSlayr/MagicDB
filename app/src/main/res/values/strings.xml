@@ -7,4 +7,8 @@
     <string name="passwordHint">Password</string>
     <string name="login">Login</string>
     <string name="register">Register</string>
+    <string name="searchHint">Search</string>
+    <string name="scan">Scan</string>
+    <string name="list">List</string>
+    <string name="logout">Logout</string>
 </resources>

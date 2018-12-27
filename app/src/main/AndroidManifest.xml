@@ -31,6 +31,8 @@
 
         <activity android:name=".ResultActivity" />
         <activity android:name=".ScanActivity" />
+        <activity android:name=".MenuActivity" />
+        <activity android:name=".ListActivity" />
     </application>
 
 </manifest>
