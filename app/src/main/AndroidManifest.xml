@@ -30,6 +30,7 @@
             android:value="ocr" />
 
         <activity android:name=".ResultActivity" />
+        <activity android:name=".ScanActivity" />
     </application>
 
 </manifest>

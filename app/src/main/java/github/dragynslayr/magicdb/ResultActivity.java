@@ -24,8 +24,8 @@ public class ResultActivity extends AppCompatActivity {
         setContentView(R.layout.activity_result);
 
         Intent intent = getIntent();
-        String scanned = intent.getStringExtra(MainActivity.EXTRA_SCANNED);
-        String[] cards = intent.getStringArrayExtra(MainActivity.EXTRA_CARDS);
+        String scanned = intent.getStringExtra(ScanActivity.EXTRA_SCANNED);
+        String[] cards = intent.getStringArrayExtra(ScanActivity.EXTRA_CARDS);
 
         TextView cardName = findViewById(R.id.scannedText);
         cardName.setText(scanned);
