@@ -11,4 +11,5 @@
     <string name="scan">Scan</string>
     <string name="list">List</string>
     <string name="logout">Logout</string>
+    <string name="listError">NO CARDS AVAILABLE</string>
 </resources>

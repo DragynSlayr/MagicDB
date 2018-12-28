@@ -52,9 +52,25 @@ class NetworkHandler {
     String[] getStringArray() {
         ArrayList<String> found = new ArrayList<>();
 
-        String response = getString();
-        if (response.length() > 0) {
-            Collections.addAll(found, response.split("\n"));
+        try {
+            InetAddress address = InetAddress.getByName(IP);
+            Socket socket = new Socket(address, PORT);
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+            out.print(cmd + ":" + arg);
+            out.flush();
+
+            String response;
+            while ((response = in.readLine()) != null) {
+                Collections.addAll(found, response.split("\n"));
+            }
+
+            in.close();
+            out.close();
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
         return found.toArray(new String[0]);

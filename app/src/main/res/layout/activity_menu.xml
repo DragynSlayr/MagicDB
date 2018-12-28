@@ -14,6 +14,7 @@
         android:layout_above="@id/listButton"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="15dp"
+        android:onClick="scan"
         android:text="@string/scan" />
 
     <Button
@@ -21,6 +22,7 @@
         android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
+        android:onClick="list"
         android:text="@string/list" />
 
     <Button
@@ -30,6 +32,7 @@
         android:layout_below="@id/listButton"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="15dp"
+        android:onClick="logout"
         android:text="@string/logout" />
 
 </RelativeLayout>

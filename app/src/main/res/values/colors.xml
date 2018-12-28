@@ -5,7 +5,7 @@
     <color name="colorAccent">#D81B60</color>
     <color name="badButtonBG">#DD2222</color>
     <color name="buttonText">#DBDBDB</color>
-    <color name="cardTextBorder">#3535FF</color>
-    <color name="cardHolderBorder">#5555FF</color>
+    <color name="cardTextBorder">#989898</color>
+    <color name="cardHolderBorder">#99FF99</color>
     <color name="darkBG">#757575</color>
 </resources>

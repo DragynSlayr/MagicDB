@@ -26,6 +26,7 @@ import java.util.Objects;
 public class ScanActivity extends AppCompatActivity {
 
     public static final String EXTRA_SCANNED = "MagicDB_Scanned";
+    public static final String EXTRA_USER_NAME = "MagicDB_User";
     public static final String EXTRA_CARDS = "MagicDB_Cards";
 
     private static final String TAG = "MagicDB_Main";
@@ -35,7 +36,7 @@ public class ScanActivity extends AppCompatActivity {
     private SurfaceView cameraView;
     private Thread searchThread;
     private boolean scanning;
-    private String scanned;
+    private String scanned, user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,7 +44,10 @@ public class ScanActivity extends AppCompatActivity {
 
         Objects.requireNonNull(getSupportActionBar()).hide();
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_scan);
+
+        Intent intent = getIntent();
+        user = intent.getStringExtra(MainActivity.EXTRA_USER_NAME);
 
         scanning = true;
         scanned = "";
@@ -56,6 +60,7 @@ public class ScanActivity extends AppCompatActivity {
                 if (found.length > 0) {
                     Intent intent = new Intent(getApplicationContext(), ResultActivity.class);
                     intent.putExtra(EXTRA_SCANNED, scanned);
+                    intent.putExtra(EXTRA_USER_NAME, user);
                     intent.putExtra(EXTRA_CARDS, found);
                     startActivity(intent);
                 } else {
@@ -65,6 +70,12 @@ public class ScanActivity extends AppCompatActivity {
         });
 
         startCameraSource();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        scanning = true;
     }
 
     @Override
@@ -113,7 +124,7 @@ public class ScanActivity extends AppCompatActivity {
                     .setFacing(CameraSource.CAMERA_FACING_BACK)
                     .setRequestedPreviewSize(1920, 1080)
                     .setAutoFocusEnabled(true)
-                    .setRequestedFps(3.0f)
+                    .setRequestedFps(2.0f)
                     .build();
 
             cameraView.getHolder().addCallback(new SurfaceHolder.Callback() {
