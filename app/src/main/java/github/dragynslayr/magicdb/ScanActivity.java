@@ -20,23 +20,13 @@ import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.text.TextBlock;
 import com.google.android.gms.vision.text.TextRecognizer;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Objects;
 
 public class ScanActivity extends AppCompatActivity {
 
     public static final String EXTRA_SCANNED = "MagicDB_Scanned";
     public static final String EXTRA_CARDS = "MagicDB_Cards";
-
-    private static final String IP = "70.72.212.179";
-    private static final int PORT = 19615;
 
     private static final String TAG = "MagicDB_Main";
     private static final int PERM_REQ_ID = 101;
@@ -62,7 +52,7 @@ public class ScanActivity extends AppCompatActivity {
         searchThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                String[] found = search(scanned);
+                String[] found = new NetworkHandler(NetworkHandler.Command.Search, scanned).getStringArray();
                 if (found.length > 0) {
                     Intent intent = new Intent(getApplicationContext(), ResultActivity.class);
                     intent.putExtra(EXTRA_SCANNED, scanned);
@@ -104,32 +94,6 @@ public class ScanActivity extends AppCompatActivity {
                         }).show();
             }
         }
-    }
-
-    private String[] search(String needle) {
-        ArrayList<String> found = new ArrayList<>();
-        try {
-            InetAddress address = InetAddress.getByName(IP);
-            Socket socket = new Socket(address, PORT);
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-            out.print(needle);
-            out.flush();
-            String response = in.readLine();
-            if (response != null) {
-                String[] cards = response.split("\n");
-                Collections.addAll(found, cards);
-            }
-
-            in.close();
-            out.close();
-            socket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return found.toArray(new String[0]);
     }
 
     private boolean isValidCard(String card) {
