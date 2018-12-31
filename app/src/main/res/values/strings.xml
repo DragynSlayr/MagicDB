@@ -12,4 +12,9 @@
     <string name="list">List</string>
     <string name="logout">Logout</string>
     <string name="listError">NO CARDS AVAILABLE</string>
+    <string-array name="sort_order_array">
+        <item>Name</item>
+        <item>Cost</item>
+        <item>Color</item>
+    </string-array>
 </resources>
