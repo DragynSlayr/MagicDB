@@ -21,6 +21,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Objects;
 
 public class ResultActivity extends AppCompatActivity {
@@ -47,6 +48,7 @@ public class ResultActivity extends AppCompatActivity {
         for (int i = 0; i < names.length; i++) {
             cards.add(new ResultCard(ids[i], names[i]));
         }
+        cards.sort(new ResultCardComparator());
 
         TextView cardName = findViewById(R.id.scannedText);
         cardName.setText(scanned);
@@ -54,44 +56,6 @@ public class ResultActivity extends AppCompatActivity {
         ListView cardsHolder = findViewById(R.id.cardHolder);
         ArrayAdapter<ResultCard> adapter = new ResultCardAdapter(this, cards);
         cardsHolder.setAdapter(adapter);
-
-        /*
-        for (String card : cards) {
-            TextView t = new TextView(this);
-            t.setText(card);
-            t.setTextSize(35.0f);
-            t.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-            t.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    TextView tv = (TextView) v;
-                    if (tv != null) {
-                        final String name = tv.getText().toString();
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                String result = new NetworkHandler(NetworkHandler.Command.AddCard, user + ":" + name).getString();
-                                if (result.equals("Put Success")) {
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            Toast.makeText(getApplicationContext(), "Added " + name, Toast.LENGTH_SHORT).show();
-                                        }
-                                    });
-                                    finish();
-                                } else {
-                                    Log.d(TAG, "Failed put");
-                                }
-                            }
-                        }).start();
-                    } else {
-                        Log.d(TAG, "TV NULL");
-                    }
-                }
-            });
-            cardsHolder.addView(t);
-        }
-        */
     }
 
     class ResultCard {
@@ -110,7 +74,6 @@ public class ResultActivity extends AppCompatActivity {
         ResultCardAdapter(Context context, ArrayList<ResultCard> cards) {
             super(context, 0, cards);
             this.cards = cards;
-            // sort
         }
 
         @NonNull
@@ -190,6 +153,14 @@ public class ResultActivity extends AppCompatActivity {
                     }
                 }
             }).start();
+        }
+    }
+
+    class ResultCardComparator implements Comparator<ResultCard> {
+
+        @Override
+        public int compare(ResultCard o1, ResultCard o2) {
+            return o1.name.compareTo(o2.name);
         }
     }
 }
