@@ -28,6 +28,7 @@ public class ScanActivity extends AppCompatActivity {
     public static final String EXTRA_SCANNED = "MagicDB_Scanned";
     public static final String EXTRA_USER_NAME = "MagicDB_User";
     public static final String EXTRA_CARDS = "MagicDB_Cards";
+    public static final String EXTRA_IDS = "MagicDB_IDs";
 
     private static final String TAG = "MagicDB_Main";
     private static final int PERM_REQ_ID = 101;
@@ -57,11 +58,19 @@ public class ScanActivity extends AppCompatActivity {
             @Override
             public void run() {
                 String[] found = new NetworkHandler(NetworkHandler.Command.Search, scanned).getStringArray();
+                String[] cards = new String[found.length];
+                String[] ids = new String[found.length];
+                for (int i = 0; i < found.length; i++) {
+                    String[] parts = found[i].split("\t");
+                    ids[i] = parts[0];
+                    cards[i] = parts[1];
+                }
                 if (found.length > 0) {
                     Intent intent = new Intent(getApplicationContext(), ResultActivity.class);
                     intent.putExtra(EXTRA_SCANNED, scanned);
                     intent.putExtra(EXTRA_USER_NAME, user);
-                    intent.putExtra(EXTRA_CARDS, found);
+                    intent.putExtra(EXTRA_CARDS, cards);
+                    intent.putExtra(EXTRA_IDS, ids);
                     startActivity(intent);
                 } else {
                     scanning = true;

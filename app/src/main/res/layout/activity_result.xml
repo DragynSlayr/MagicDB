@@ -16,19 +16,12 @@
         android:textAlignment="center"
         android:textSize="35sp" />
 
-    <ScrollView
+    <ListView
+        android:id="@+id/cardHolder"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/scannedText"
         android:background="@color/cardHolderBorder"
-        android:scrollbars="vertical">
-
-        <LinearLayout
-            android:id="@+id/cardHolder"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical" />
-
-    </ScrollView>
+        android:scrollbars="vertical" />
 
 </RelativeLayout>
