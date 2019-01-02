@@ -1,22 +1,26 @@
 package github.dragynslayr.magicdb;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,10 +30,7 @@ public class ListActivity extends AppCompatActivity {
 
     private String user;
     private Spinner spinner;
-    private EditText searchBox;
     private String[] foundCards;
-    private CardItem[] received, inView;
-    private LinearLayout cardsHolder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,19 +44,20 @@ public class ListActivity extends AppCompatActivity {
         Intent intent = getIntent();
         user = intent.getStringExtra(MainActivity.EXTRA_USER_NAME);
 
-        received = new CardItem[0];
-
-        searchBox = findViewById(R.id.searchBox);
-        cardsHolder = findViewById(R.id.cardList);
+        EditText searchBox = findViewById(R.id.searchBox);
+        final ListView cardsHolder = findViewById(R.id.cardList);
 
         spinner = findViewById(R.id.spinner);
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.sort_order_array, R.layout.support_simple_spinner_dropdown_item);
+        final ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, R.array.sort_order_array, R.layout.support_simple_spinner_dropdown_item);
         adapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                updateList();
+                ListCardAdapter cardAdapter = (ListCardAdapter) cardsHolder.getAdapter();
+                if (cardAdapter != null) {
+                    cardAdapter.sortAndUpdate();
+                }
             }
 
             @Override
@@ -74,7 +76,8 @@ public class ListActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable s) {
-                filterItems(s.toString().toLowerCase());
+                ListCardAdapter cardAdapter = (ListCardAdapter) cardsHolder.getAdapter();
+                cardAdapter.filter = s.toString().toLowerCase();
             }
         });
 
@@ -82,62 +85,60 @@ public class ListActivity extends AppCompatActivity {
             @Override
             public void run() {
                 foundCards = new NetworkHandler(NetworkHandler.Command.GetList, user).getStringArray();
-                Arrays.sort(foundCards);
+                final ArrayList<ListCard> cards;
+
                 if (foundCards.length == 0) {
-                    addToView(new CardItem[0]);
+                    cards = new ArrayList<>();
                 } else {
-                    ArrayList<CardItem> cardItems = flattenCards(foundCards);
-                    cardItems.sort(getComparator());
-                    received = cardItems.toArray(new CardItem[0]);
-                    addToView(received);
+                    cards = parse(foundCards);
                 }
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ListCardAdapter adapter = new ListCardAdapter(getApplicationContext(), cards);
+                        cardsHolder.setAdapter(adapter);
+
+                        if (cards.size() == 0) {
+                            TextView errorText = findViewById(R.id.error);
+                            errorText.setVisibility(View.VISIBLE);
+                            cardsHolder.setVisibility(View.GONE);
+                        }
+                    }
+                });
             }
         }).start();
     }
 
-    private void addToView(final CardItem[] cards) {
-        inView = cards;
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                cardsHolder.removeAllViews();
-                if (cards.length == 0) {
-                    cardsHolder.addView(createTextView(getString(R.string.listError)));
-                } else {
-                    for (CardItem card : cards) {
-                        cardsHolder.addView(createTextView(card.name + " x" + card.quantity));
-                    }
-                }
-            }
-        });
+    private ArrayList<ListCard> parse(String[] found) {
+        ArrayList<ListCard> cards = new ArrayList<>(found.length);
+        for (String s : found) {
+            String[] parts = s.split("\t");
+            ListCard card = new ListCard(parts[1], parts[0], parts[3], Integer.parseInt(parts[2]), 1);
+            cards.add(card);
+        }
+        return flattenCards(cards);
     }
 
-    private TextView createTextView(String text) {
-        TextView t = new TextView(getApplicationContext());
-        t.setText(text);
-        t.setTextSize(35.0f);
-        return t;
-    }
-
-    private ArrayList<CardItem> flattenCards(String[] foundCards) {
-        HashMap<String, Integer> map = new HashMap<>();
-        for (String card : foundCards) {
-            Integer num = map.get(card);
-            if (num != null) {
-                map.put(card, num + 1);
+    private ArrayList<ListCard> flattenCards(ArrayList<ListCard> cards) {
+        HashMap<String, ListCard> map = new HashMap<>();
+        for (ListCard c : cards) {
+            ListCard card = map.get(c.id);
+            if (card != null) {
+                map.put(c.id, new ListCard(card.name, card.id, card.cost, card.cmc, card.quantity + 1));
             } else {
-                map.put(card, 1);
+                map.put(c.id, c);
             }
         }
-        ArrayList<CardItem> cardItems = new ArrayList<>(map.keySet().size());
-        for (Map.Entry<String, Integer> pair : map.entrySet()) {
-            cardItems.add(new CardItem(pair.getKey(), pair.getValue()));
+        ArrayList<ListCard> cardItems = new ArrayList<>(map.keySet().size());
+        for (Map.Entry<String, ListCard> pair : map.entrySet()) {
+            cardItems.add(pair.getValue());
         }
         return cardItems;
     }
 
-    private Comparator<CardItem> getComparator() {
-        Comparator<CardItem> comparator = new CardNameComparator();
+    private Comparator<ListCard> getComparator() {
+        Comparator<ListCard> comparator = new CardNameComparator();
         String order = spinner.getSelectedItem().toString();
         if (order.equals("Cost")) {
             comparator = new CardCostComparator();
@@ -147,64 +148,92 @@ public class ListActivity extends AppCompatActivity {
         return comparator;
     }
 
-    private void updateList() {
-        ArrayList<CardItem> cardItems = new ArrayList<>();
-        Collections.addAll(cardItems, inView);
-        cardItems.sort(getComparator());
-        addToView(cardItems.toArray(new CardItem[0]));
-    }
+    class ListCardAdapter extends ArrayAdapter<ListCard> {
 
-    private void filterItems(String filter) {
-        if (filter.length() == 0) {
-            addToView(received);
-        } else {
-            ArrayList<String> filtered = new ArrayList<>(foundCards.length);
-            for (String s : foundCards) {
-                if (s.toLowerCase().contains(filter)) {
-                    filtered.add(s);
-                }
+        String filter;
+        private ArrayList<ListCard> cards;
+
+        ListCardAdapter(Context context, ArrayList<ListCard> cards) {
+            super(context, 0, cards);
+            this.cards = cards;
+            filter = "";
+            sortAndUpdate();
+        }
+
+        @SuppressLint("SetTextI18n")
+        @NonNull
+        @Override
+        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+            ListCard card = getItem(position);
+            if (convertView == null) {
+                convertView = LayoutInflater.from(getContext()).inflate(R.layout.card_list, parent, false);
             }
-            ArrayList<CardItem> cardItems = flattenCards(filtered.toArray(new String[0]));
-            cardItems.sort(getComparator());
-            addToView(cardItems.toArray(new CardItem[0]));
+
+            TextView nameText = convertView.findViewById(R.id.cardName);
+            TextView quantityText = convertView.findViewById(R.id.cardQuantity);
+            TextView costText = convertView.findViewById(R.id.cardCost);
+            TextView idText = convertView.findViewById(R.id.cardId);
+            TextView cmcText = convertView.findViewById(R.id.cardCMC);
+
+            if (card != null) {
+                nameText.setText(card.name);
+                quantityText.setText(card.quantity + "");
+                costText.setText(card.cost);
+                idText.setText(card.id);
+                cmcText.setText(card.cmc + "");
+            }
+
+            if (filter.length() > 0 && !nameText.getText().toString().toLowerCase().contains(filter)) {
+                convertView = LayoutInflater.from(getContext()).inflate(R.layout.row_null, parent, false);
+            }
+
+            return convertView;
+        }
+
+        void sortAndUpdate() {
+            cards.sort(getComparator());
+            notifyDataSetChanged();
         }
     }
 
-    public class CardItem {
-        public String name;
-        int quantity;
+    class ListCard {
+        String name, id, cost;
+        int quantity, cmc;
 
-        CardItem(String name, int quantity) {
+        ListCard(String name, String id, String cost, int cmc, int quantity) {
             this.name = name;
+            this.id = id;
+            this.cost = cost;
+            this.cmc = cmc;
             this.quantity = quantity;
         }
     }
 
-    public class CardNameComparator implements Comparator<CardItem> {
+    public class CardNameComparator implements Comparator<ListCard> {
 
         @Override
-        public int compare(CardItem o1, CardItem o2) {
+        public int compare(ListCard o1, ListCard o2) {
             return o1.name.compareTo(o2.name);
         }
     }
 
-    public class CardCostComparator implements Comparator<CardItem> {
+    public class CardCostComparator implements Comparator<ListCard> {
 
         @Override
-        public int compare(CardItem o1, CardItem o2) { // TODO: Implement this
-            int diff = o1.quantity - o2.quantity;
+        public int compare(ListCard o1, ListCard o2) {
+            int diff = o1.cmc - o2.cmc;
             if (diff != 0) {
                 return diff;
             } else {
-                return o1.quantity - o2.quantity;
+                return o1.name.compareTo(o2.name);
             }
         }
     }
 
-    public class CardColorComparator implements Comparator<CardItem> {
+    public class CardColorComparator implements Comparator<ListCard> {
 
         @Override
-        public int compare(CardItem o1, CardItem o2) { // TODO: Implement this
+        public int compare(ListCard o1, ListCard o2) { // TODO: Implement this
             int diff = o1.quantity - o2.quantity;
             if (diff != 0) {
                 return diff;

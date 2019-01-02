@@ -30,18 +30,20 @@
 
     </LinearLayout>
 
-    <ScrollView
+    <ListView
+        android:id="@+id/cardList"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="10dp"
-        android:scrollbars="vertical">
+        android:scrollbars="vertical" />
 
-        <LinearLayout
-            android:id="@+id/cardList"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical" />
-
-    </ScrollView>
+    <TextView
+        android:id="@+id/error"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/listError"
+        android:textAlignment="center"
+        android:textSize="32sp"
+        android:visibility="gone" />
 
 </LinearLayout>

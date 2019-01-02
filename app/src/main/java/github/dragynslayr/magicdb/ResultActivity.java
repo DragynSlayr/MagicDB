@@ -69,11 +69,8 @@ public class ResultActivity extends AppCompatActivity {
 
     class ResultCardAdapter extends ArrayAdapter<ResultCard> {
 
-        private ArrayList<ResultCard> cards;
-
         ResultCardAdapter(Context context, ArrayList<ResultCard> cards) {
             super(context, 0, cards);
-            this.cards = cards;
         }
 
         @NonNull
@@ -123,7 +120,6 @@ public class ResultActivity extends AppCompatActivity {
                             dialog.cancel();
                         }
                     }).show();
-
                     return true;
                 }
             });
