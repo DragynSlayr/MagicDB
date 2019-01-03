@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -104,22 +103,36 @@ public class ResultActivity extends AppCompatActivity {
                     final String name = nameText.getText().toString();
                     final String id = idText.getText().toString();
 
-                    final EditText input = new EditText(getApplicationContext());
-                    input.setInputType(InputType.TYPE_CLASS_NUMBER);
-                    input.setText("0");
-
-                    new AlertDialog.Builder(getContext()).setTitle("Specify Quantity").setView(input).setPositiveButton("Enter", new DialogInterface.OnClickListener() {
+                    AlertDialog dialog = new AlertDialog.Builder(getContext(), R.style.Dialog).setTitle("Add " + name).setView(R.layout.dialog).setPositiveButton("Add", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            int num = Integer.parseInt(input.getText().toString());
-                            sendPut(id, name, num);
+                            EditText input = ((AlertDialog) dialog).findViewById(R.id.addInput);
+                            String text = input.getText().toString();
+                            if (text.length() > 0) {
+                                int num = Integer.parseInt(text);
+                                if (num > 0 && num < 1000) {
+                                    sendPut(id, name, num);
+                                } else {
+                                    toast("Amount must be between 1-999", Toast.LENGTH_LONG);
+                                }
+                            } else {
+                                toast("Amount must be between 1-999", Toast.LENGTH_LONG);
+                            }
                         }
                     }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             dialog.cancel();
                         }
-                    }).show();
+                    }).create();
+                    dialog.show();
+
+                    WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
+                    lp.copyFrom(Objects.requireNonNull(dialog.getWindow()).getAttributes());
+                    lp.height = 300;
+                    lp.width = 600;
+                    dialog.getWindow().setAttributes(lp);
+
                     return true;
                 }
             });
@@ -132,23 +145,32 @@ public class ResultActivity extends AppCompatActivity {
         }
 
         private void sendPut(final String id, final String name, final int num) {
+            toast("Adding " + name);
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     String result = new NetworkHandler(NetworkHandler.Command.AddCard, user + ":" + num + ":" + id).getString();
                     if (result.equals("Put Success")) {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(getApplicationContext(), "Added " + name, Toast.LENGTH_SHORT).show();
-                            }
-                        });
+                        toast("Added " + name);
                         finish();
                     } else {
                         Log.d(TAG, "Failed put");
                     }
                 }
             }).start();
+        }
+
+        private void toast(String text) {
+            toast(text, Toast.LENGTH_SHORT);
+        }
+
+        private void toast(final String text, final int duration) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(getApplicationContext(), text, duration).show();
+                }
+            });
         }
     }
 

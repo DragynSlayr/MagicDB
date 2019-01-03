@@ -22,8 +22,6 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 public class ListActivity extends AppCompatActivity {
@@ -114,27 +112,10 @@ public class ListActivity extends AppCompatActivity {
         ArrayList<ListCard> cards = new ArrayList<>(found.length);
         for (String s : found) {
             String[] parts = s.split("\t");
-            ListCard card = new ListCard(parts[1], parts[0], parts[3], Integer.parseInt(parts[2]), 1);
+            ListCard card = new ListCard(parts[1], parts[0], parts[3], Integer.parseInt(parts[2]), Integer.parseInt(parts[4]));
             cards.add(card);
         }
-        return flattenCards(cards);
-    }
-
-    private ArrayList<ListCard> flattenCards(ArrayList<ListCard> cards) {
-        HashMap<String, ListCard> map = new HashMap<>();
-        for (ListCard c : cards) {
-            ListCard card = map.get(c.id);
-            if (card != null) {
-                map.put(c.id, new ListCard(card.name, card.id, card.cost, card.cmc, card.quantity + 1));
-            } else {
-                map.put(c.id, c);
-            }
-        }
-        ArrayList<ListCard> cardItems = new ArrayList<>(map.keySet().size());
-        for (Map.Entry<String, ListCard> pair : map.entrySet()) {
-            cardItems.add(pair.getValue());
-        }
-        return cardItems;
+        return cards;
     }
 
     private Comparator<ListCard> getComparator() {

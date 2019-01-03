@@ -12,6 +12,8 @@
     <string name="list">List</string>
     <string name="logout">Logout</string>
     <string name="listError">NO CARDS AVAILABLE</string>
+    <string name="amountPrompt">Enter an amount</string>
+    <string name="amountHint">1&#8211;999</string>
     <string-array name="sort_order_array">
         <item>Name</item>
         <item>Cost</item>
