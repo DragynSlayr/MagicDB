@@ -76,6 +76,7 @@ public class ListActivity extends AppCompatActivity {
             public void afterTextChanged(Editable s) {
                 ListCardAdapter cardAdapter = (ListCardAdapter) cardsHolder.getAdapter();
                 cardAdapter.filter = s.toString().toLowerCase();
+                cardAdapter.notifyDataSetChanged();
             }
         });
 
@@ -141,14 +142,29 @@ public class ListActivity extends AppCompatActivity {
             sortAndUpdate();
         }
 
+        @Nullable
+        @Override
+        public ListCard getItem(int position) {
+            ListCard card = null;
+            if (position < cards.size()) {
+                card = cards.get(position);
+                if (filter.length() > 0) {
+                    if (card.name.toLowerCase().contains(filter)) {
+                        return card;
+                    } else {
+                        return null;
+                    }
+                }
+            }
+            return card;
+        }
+
         @SuppressLint("SetTextI18n")
         @NonNull
         @Override
-        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) { // TODO: Simplify / fix this
             ListCard card = getItem(position);
-            if (convertView == null) {
-                convertView = LayoutInflater.from(getContext()).inflate(R.layout.card_list, parent, false);
-            }
+            convertView = LayoutInflater.from(getContext()).inflate(R.layout.card_list, parent, false);
 
             TextView nameText = convertView.findViewById(R.id.cardName);
             TextView quantityText = convertView.findViewById(R.id.cardQuantity);
@@ -156,16 +172,15 @@ public class ListActivity extends AppCompatActivity {
             TextView idText = convertView.findViewById(R.id.cardId);
             TextView cmcText = convertView.findViewById(R.id.cardCMC);
 
-            if (card != null) {
+            if (card != null && nameText != null) { // && card.name != null && nameText != null
                 nameText.setText(card.name);
                 quantityText.setText(card.quantity + "");
                 costText.setText(card.cost);
                 idText.setText(card.id);
                 cmcText.setText(card.cmc + "");
-            }
-
-            if (filter.length() > 0 && !nameText.getText().toString().toLowerCase().contains(filter)) {
+            } else {
                 convertView = LayoutInflater.from(getContext()).inflate(R.layout.row_null, parent, false);
+                convertView.setVisibility(View.GONE);
             }
 
             return convertView;

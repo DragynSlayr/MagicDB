@@ -33,14 +33,18 @@
     <ListView
         android:id="@+id/cardList"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
         android:layout_marginTop="10dp"
+        android:layout_marginEnd="5dp"
+        android:dividerHeight="4dp"
         android:scrollbars="vertical" />
 
     <TextView
         android:id="@+id/error"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
+        android:background="@color/whiteBG"
         android:text="@string/listError"
         android:textAlignment="center"
         android:textSize="32sp"
