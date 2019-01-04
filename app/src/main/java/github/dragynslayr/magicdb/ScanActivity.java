@@ -21,6 +21,7 @@ import com.google.android.gms.vision.text.TextBlock;
 import com.google.android.gms.vision.text.TextRecognizer;
 
 import java.io.IOException;
+import java.text.Normalizer;
 import java.util.Objects;
 
 public class ScanActivity extends AppCompatActivity {
@@ -79,12 +80,24 @@ public class ScanActivity extends AppCompatActivity {
         });
 
         startCameraSource();
+
+        Log.d(TAG, "Trigger");
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        scanning = true;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                scanning = true;
+            }
+        }).start();
     }
 
     @Override
@@ -169,7 +182,9 @@ public class ScanActivity extends AppCompatActivity {
                 public void receiveDetections(Detector.Detections<TextBlock> detections) {
                     final SparseArray<TextBlock> items = detections.getDetectedItems();
                     if (scanning && items.size() != 0) {
-                        scanned = items.valueAt(0).getValue().replaceAll("[^\\x00-\\x7F]", "").replace('(', '\0').replace(')', '\0').replace(':', '\0').trim();
+                        scanned = items.valueAt(0).getValue();
+                        scanned = Normalizer.normalize(scanned, Normalizer.Form.NFD);
+                        scanned = replaceAll(scanned).replaceAll("[^\\x00-\\x7F]", "").trim();
                         if (isValidCard(scanned)) {
                             Log.d(TAG, "Found: " + scanned);
                             scanning = false;
@@ -179,5 +194,13 @@ public class ScanActivity extends AppCompatActivity {
                 }
             });
         }
+    }
+
+    private String replaceAll(String s) {
+        char[] chars = new char[]{'(', ')', ':', '\n', '\r', '\t'};
+        for (char c : chars) {
+            s = s.replace(c + "", "");
+        }
+        return s;
     }
 }

@@ -1,5 +1,6 @@
 package github.dragynslayr.magicdb;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -9,6 +10,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +24,8 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Objects;
+
+import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 
 public class ResultActivity extends AppCompatActivity {
 
@@ -88,12 +92,37 @@ public class ResultActivity extends AppCompatActivity {
                 idText.setText(card.id);
             }
 
+            final String name = nameText.getText().toString();
+            final String id = idText.getText().toString();
+
+            convertView.setOnClickListener(new View.OnClickListener() {
+                @SuppressLint("SetTextI18n")
+                @Override
+                public void onClick(View v) {
+                    TextView text = new TextView(getContext());
+                    text.setText("Would you like to add " + name + "?");
+                    text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 22.0f);
+                    text.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                    text.setTextColor(getColor(R.color.greenBG));
+                    AlertDialog dialog = new AlertDialog.Builder(getContext(), R.style.Dialog).setTitle("Add " + name).setView(text).setPositiveButton("Add", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            sendPut(id, name);
+                        }
+                    }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.cancel();
+                        }
+                    }).create();
+                    dialog.show();
+                    Objects.requireNonNull(dialog.getWindow()).setLayout(WRAP_CONTENT, WRAP_CONTENT);
+                }
+            });
+
             convertView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
-                    final String name = nameText.getText().toString();
-                    final String id = idText.getText().toString();
-
                     AlertDialog dialog = new AlertDialog.Builder(getContext(), R.style.Dialog).setTitle("Add " + name).setView(R.layout.dialog).setPositiveButton("Add", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
@@ -117,18 +146,17 @@ public class ResultActivity extends AppCompatActivity {
                         }
                     }).create();
                     dialog.show();
-
-                    WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
-                    lp.copyFrom(Objects.requireNonNull(dialog.getWindow()).getAttributes());
-                    lp.height = 300;
-                    lp.width = 600;
-                    dialog.getWindow().setAttributes(lp);
+                    Objects.requireNonNull(dialog.getWindow()).setLayout(WRAP_CONTENT, WRAP_CONTENT);
 
                     return true;
                 }
             });
 
             return convertView;
+        }
+
+        private void sendPut(String id, String name) {
+            sendPut(id, name, 1);
         }
 
         private void sendPut(final String id, final String name, final int num) {
