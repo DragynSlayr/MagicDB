@@ -88,15 +88,6 @@ public class ResultActivity extends AppCompatActivity {
                 idText.setText(card.id);
             }
 
-            convertView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    String name = nameText.getText().toString();
-                    String id = idText.getText().toString();
-                    sendPut(id, name);
-                }
-            });
-
             convertView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
@@ -138,10 +129,6 @@ public class ResultActivity extends AppCompatActivity {
             });
 
             return convertView;
-        }
-
-        private void sendPut(String id, String name) {
-            sendPut(id, name, 1);
         }
 
         private void sendPut(final String id, final String name, final int num) {
