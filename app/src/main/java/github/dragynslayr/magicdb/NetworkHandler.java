@@ -77,7 +77,7 @@ class NetworkHandler {
     }
 
     public enum Command {
-        Search("SRC"), Register("REG"), Login("LGN"), GetList("GET"), AddCard("PUT");
+        Search("SRC"), Register("REG"), Login("LGN"), GetList("GET"), AddCard("PUT"), RemoveCard("REM");
 
         private String cmd;
 

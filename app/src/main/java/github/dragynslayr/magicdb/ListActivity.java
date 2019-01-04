@@ -1,7 +1,9 @@
 package github.dragynslayr.magicdb;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -9,6 +11,7 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,16 +22,22 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Objects;
 
+import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
+
 public class ListActivity extends AppCompatActivity {
+
+    private final String TAG = "MagicDB_List";
 
     private String user;
     private Spinner spinner;
-    private String[] foundCards;
+    private ArrayList<ListCard> cards, allCards;
+    private Thread listThread;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,23 +83,22 @@ public class ListActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable s) {
-                ListCardAdapter cardAdapter = (ListCardAdapter) cardsHolder.getAdapter();
-                cardAdapter.filter = s.toString().toLowerCase();
-                cardAdapter.notifyDataSetChanged();
+                filterCards(s.toString().toLowerCase(), cardsHolder);
             }
         });
 
-        new Thread(new Runnable() {
+        listThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                foundCards = new NetworkHandler(NetworkHandler.Command.GetList, user).getStringArray();
-                final ArrayList<ListCard> cards;
-
+                String[] foundCards = new NetworkHandler(NetworkHandler.Command.GetList, user).getStringArray();
                 if (foundCards.length == 0) {
                     cards = new ArrayList<>();
                 } else {
                     cards = parse(foundCards);
                 }
+
+                allCards = new ArrayList<>();
+                allCards.addAll(cards);
 
                 runOnUiThread(new Runnable() {
                     @Override
@@ -106,7 +114,34 @@ public class ListActivity extends AppCompatActivity {
                     }
                 });
             }
-        }).start();
+        });
+        listThread.start();
+    }
+
+    private void filterCards(String filter, ListView cardsHolder) {
+        ListCardAdapter cardAdapter = (ListCardAdapter) cardsHolder.getAdapter();
+        if (filter.length() > 0) {
+            ArrayList<ListCard> cards = new ArrayList<>();
+            for (ListCard card : allCards) {
+                if (card.name.toLowerCase().contains(filter)) {
+                    cards.add(card);
+                }
+            }
+            cardAdapter.clear();
+            cardAdapter.addAll(cards);
+        } else {
+            cardAdapter.clear();
+            cardAdapter.addAll(allCards);
+        }
+        cardAdapter.sortAndUpdate();
+        TextView errorText = findViewById(R.id.error);
+        if (cardAdapter.getCount() == 0) {
+            errorText.setVisibility(View.VISIBLE);
+            cardsHolder.setVisibility(View.GONE);
+        } else {
+            errorText.setVisibility(View.GONE);
+            cardsHolder.setVisibility(View.VISIBLE);
+        }
     }
 
     private ArrayList<ListCard> parse(String[] found) {
@@ -120,51 +155,50 @@ public class ListActivity extends AppCompatActivity {
     }
 
     private Comparator<ListCard> getComparator() {
-        Comparator<ListCard> comparator = new CardNameComparator();
         String order = spinner.getSelectedItem().toString();
-        if (order.equals("Cost")) {
-            comparator = new CardCostComparator();
-        } else if (order.equals("Color")) {
-            comparator = new CardColorComparator();
+        switch (order) {
+            case "Cost":
+                return new CardCostComparator();
+            case "Color":
+                return new CardColorComparator();
+            case "Quantity":
+                return new CardQuantityComparator();
+            default:
+                return new CardNameComparator();
         }
-        return comparator;
+    }
+
+    private void toast(String text) {
+        toast(text, Toast.LENGTH_SHORT);
+    }
+
+    private void toast(final String text, final int duration) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(getApplicationContext(), text, duration).show();
+            }
+        });
     }
 
     class ListCardAdapter extends ArrayAdapter<ListCard> {
 
-        String filter;
         private ArrayList<ListCard> cards;
 
         ListCardAdapter(Context context, ArrayList<ListCard> cards) {
             super(context, 0, cards);
             this.cards = cards;
-            filter = "";
             sortAndUpdate();
-        }
-
-        @Nullable
-        @Override
-        public ListCard getItem(int position) {
-            ListCard card = null;
-            if (position < cards.size()) {
-                card = cards.get(position);
-                if (filter.length() > 0) {
-                    if (card.name.toLowerCase().contains(filter)) {
-                        return card;
-                    } else {
-                        return null;
-                    }
-                }
-            }
-            return card;
         }
 
         @SuppressLint("SetTextI18n")
         @NonNull
         @Override
-        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) { // TODO: Simplify / fix this
-            ListCard card = getItem(position);
-            convertView = LayoutInflater.from(getContext()).inflate(R.layout.card_list, parent, false);
+        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+            final ListCard card = Objects.requireNonNull(getItem(position));
+            if (convertView == null) {
+                convertView = LayoutInflater.from(getContext()).inflate(R.layout.card_list, parent, false);
+            }
 
             TextView nameText = convertView.findViewById(R.id.cardName);
             TextView quantityText = convertView.findViewById(R.id.cardQuantity);
@@ -172,16 +206,60 @@ public class ListActivity extends AppCompatActivity {
             TextView idText = convertView.findViewById(R.id.cardId);
             TextView cmcText = convertView.findViewById(R.id.cardCMC);
 
-            if (card != null && nameText != null) { // && card.name != null && nameText != null
-                nameText.setText(card.name);
-                quantityText.setText(card.quantity + "");
-                costText.setText(card.cost);
-                idText.setText(card.id);
-                cmcText.setText(card.cmc + "");
-            } else {
-                convertView = LayoutInflater.from(getContext()).inflate(R.layout.row_null, parent, false);
-                convertView.setVisibility(View.GONE);
-            }
+            nameText.setText(card.name);
+            quantityText.setText(card.quantity + "");
+            costText.setText(card.cost);
+            idText.setText(card.id);
+            cmcText.setText(card.cmc + "");
+
+            convertView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    View layout = View.inflate(getApplicationContext(), R.layout.dialog, null);
+                    EditText text = layout.findViewById(R.id.addInput);
+                    text.setHint("1-" + card.quantity);
+                    text.setHintTextColor(getColor(R.color.greenBG));
+                    AlertDialog dialog = new AlertDialog.Builder(ListActivity.this, R.style.Dialog).setTitle("Remove " + card.name).setView(layout).setPositiveButton("Remove", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            EditText input = ((AlertDialog) dialog).findViewById(R.id.addInput);
+                            String text = input.getText().toString();
+                            String errorString = "Amount must be between 1-" + card.quantity;
+                            if (text.length() > 0) {
+                                final int num = Integer.parseInt(text);
+                                if (num > 0 && num <= card.quantity) {
+                                    toast("Removing " + card.name);
+                                    new Thread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            String result = new NetworkHandler(NetworkHandler.Command.RemoveCard, user + ":" + card.id + ":" + num).getString();
+                                            if (result.equals("Remove Success")) {
+                                                toast("Removed " + card.name);
+                                                listThread.start();
+                                            } else {
+                                                Log.d(TAG, "Failed remove");
+                                            }
+                                        }
+                                    }).start();
+                                } else {
+                                    toast(errorString, Toast.LENGTH_LONG);
+                                }
+                            } else {
+                                toast(errorString, Toast.LENGTH_LONG);
+                            }
+                        }
+                    }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.cancel();
+                        }
+                    }).create();
+                    dialog.show();
+                    Objects.requireNonNull(dialog.getWindow()).setLayout(WRAP_CONTENT, WRAP_CONTENT);
+
+                    return true;
+                }
+            });
 
             return convertView;
         }
@@ -230,6 +308,19 @@ public class ListActivity extends AppCompatActivity {
 
         @Override
         public int compare(ListCard o1, ListCard o2) { // TODO: Implement this
+            int diff = o1.quantity - o2.quantity;
+            if (diff != 0) {
+                return diff;
+            } else {
+                return o1.quantity - o2.quantity;
+            }
+        }
+    }
+
+    public class CardQuantityComparator implements Comparator<ListCard> {
+
+        @Override
+        public int compare(ListCard o1, ListCard o2) {
             int diff = o1.quantity - o2.quantity;
             if (diff != 0) {
                 return diff;

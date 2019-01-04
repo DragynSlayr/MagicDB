@@ -18,5 +18,6 @@
         <item>Name</item>
         <item>Cost</item>
         <item>Color</item>
+        <item>Quantity</item>
     </string-array>
 </resources>
