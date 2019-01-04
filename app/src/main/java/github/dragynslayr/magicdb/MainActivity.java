@@ -32,6 +32,12 @@ public class MainActivity extends AppCompatActivity {
         passEdit = findViewById(R.id.password);
         errorText = findViewById(R.id.errorMessage);
 
+        String user = FileHandler.loadUser(this);
+        if (user.length() > 0) {
+            userEdit.setText(user);
+            passEdit.requestFocus();
+        }
+
         passEdit.setOnKeyListener(new View.OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
@@ -60,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void sendRequest(NetworkHandler.Command cmd, String expected) {
-        String user = userEdit.getText().toString();
+        String user = userEdit.getText().toString().trim();
         String pass = passEdit.getText().toString();
         String result = new NetworkHandler(cmd, user + ":" + pass).getString();
 

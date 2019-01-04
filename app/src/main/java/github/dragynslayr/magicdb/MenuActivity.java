@@ -23,6 +23,7 @@ public class MenuActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         user = intent.getStringExtra(MainActivity.EXTRA_USER_NAME);
+        FileHandler.saveUser(this, user);
     }
 
     public void scan(View view) {
