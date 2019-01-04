@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/darkBG"
+    android:background="@color/whiteBG"
     tools:context=".ResultActivity">
 
     <TextView
@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="4dp"
-        android:background="@color/cardTextBorder"
+        android:background="@color/blueBG"
         android:text="@string/txt_message"
         android:textAlignment="center"
         android:textSize="35sp" />
@@ -21,7 +21,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/scannedText"
-        android:background="@color/cardHolderBorder"
+        android:background="@color/redBG"
         android:scrollbars="vertical" />
 
 </RelativeLayout>

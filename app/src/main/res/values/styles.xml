@@ -9,7 +9,7 @@
     </style>
 
     <style name="Dialog" parent="Theme.AppCompat.DayNight.DarkActionBar">
-        <item name="android:background">@color/darkBG</item>
+        <item name="android:background">@color/whiteBG</item>
     </style>
 
 </resources>

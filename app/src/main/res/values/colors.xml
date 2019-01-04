@@ -3,9 +3,14 @@
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
-    <color name="badButtonBG">#DD2222</color>
-    <color name="buttonText">#DBDBDB</color>
-    <color name="cardTextBorder">#989898</color>
-    <color name="cardHolderBorder">#99FF99</color>
-    <color name="darkBG">#757575</color>
+    <color name="blackBG">#A69F9D</color>
+    <color name="blackFG">#150B00</color>
+    <color name="blueBG">#B3CEEA</color>
+    <color name="blueFG">#0E68AB</color>
+    <color name="greenBG">#C4D3CA</color>
+    <color name="greenFG">#00733E</color>
+    <color name="redBG">#EB9F82</color>
+    <color name="redFG">#D3202A</color>
+    <color name="whiteBG">#F8E7B9</color>
+    <color name="whiteFG">#F9FAF4</color>
 </resources>
