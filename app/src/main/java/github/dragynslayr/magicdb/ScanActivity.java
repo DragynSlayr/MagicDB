@@ -80,8 +80,6 @@ public class ScanActivity extends AppCompatActivity {
         });
 
         startCameraSource();
-
-        Log.d(TAG, "Trigger");
     }
 
     @Override
@@ -91,7 +89,7 @@ public class ScanActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    Thread.sleep(2000);
+                    Thread.sleep(2500);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
