@@ -34,9 +34,6 @@ public class ScanActivity extends AppCompatActivity {
     private static final String TAG = "MagicDB_Main";
     private static final int PERM_REQ_ID = 101;
 
-    private final float FPS = 2.0f;
-    private final long TIME_OUT = 1500;
-
     private CameraSource cameraSource;
     private SurfaceView cameraView;
     private Thread searchThread;
@@ -54,13 +51,14 @@ public class ScanActivity extends AppCompatActivity {
         Intent intent = getIntent();
         user = intent.getStringExtra(MainActivity.EXTRA_USER_NAME);
 
-        scanning = true;
+        delayScan();
         scanned = "";
 
         cameraView = findViewById(R.id.surfaceView);
         searchThread = new Thread(new Runnable() {
             @Override
             public void run() {
+                scanning = false;
                 String[] found = new NetworkHandler(NetworkHandler.Command.Search, scanned).getStringArray();
                 String[] cards = new String[found.length];
                 String[] ids = new String[found.length];
@@ -77,7 +75,7 @@ public class ScanActivity extends AppCompatActivity {
                     intent.putExtra(EXTRA_IDS, ids);
                     startActivity(intent);
                 } else {
-                    scanning = true;
+                    delayScan();
                 }
             }
         });
@@ -85,20 +83,24 @@ public class ScanActivity extends AppCompatActivity {
         startCameraSource();
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
+    private void delayScan() {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    Thread.sleep(TIME_OUT);
+                    Thread.sleep(2000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
                 scanning = true;
             }
         }).start();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        delayScan();
     }
 
     @Override
@@ -147,7 +149,7 @@ public class ScanActivity extends AppCompatActivity {
                     .setFacing(CameraSource.CAMERA_FACING_BACK)
                     .setRequestedPreviewSize(1920, 1080)
                     .setAutoFocusEnabled(true)
-                    .setRequestedFps(FPS)
+                    .setRequestedFps(2.0f)
                     .build();
 
             cameraView.getHolder().addCallback(new SurfaceHolder.Callback() {
@@ -188,7 +190,6 @@ public class ScanActivity extends AppCompatActivity {
                         scanned = replaceAll(scanned).replaceAll("[^\\x00-\\x7F]", "").trim();
                         if (isValidCard(scanned)) {
                             Log.d(TAG, "Found: " + scanned);
-                            scanning = false;
                             searchThread.start();
                         }
                     }

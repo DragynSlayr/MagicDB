@@ -1,11 +1,13 @@
 package github.dragynslayr.magicdb;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -36,6 +38,14 @@ public class MainActivity extends AppCompatActivity {
         if (user.length() > 0) {
             userEdit.setText(user);
             passEdit.requestFocus();
+            final InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            passEdit.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    passEdit.requestFocus();
+                    imm.showSoftInput(passEdit, 0);
+                }
+            }, 100);
         }
 
         passEdit.setOnKeyListener(new View.OnKeyListener() {

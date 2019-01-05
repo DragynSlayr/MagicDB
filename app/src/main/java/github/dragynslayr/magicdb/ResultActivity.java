@@ -11,10 +11,12 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -123,21 +125,21 @@ public class ResultActivity extends AppCompatActivity {
             convertView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
-                    AlertDialog dialog = new AlertDialog.Builder(getContext(), R.style.Dialog).setTitle("Add " + name).setView(R.layout.dialog).setPositiveButton("Add", new DialogInterface.OnClickListener() {
+                    View layout = View.inflate(getApplicationContext(), R.layout.dialog, null);
+                    final EditText text = layout.findViewById(R.id.addInput);
+                    final InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    text.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            text.requestFocus();
+                            imm.showSoftInput(text, 0);
+                        }
+                    }, 100);
+
+                    final AlertDialog dialog = new AlertDialog.Builder(getContext(), R.style.Dialog).setTitle("Add " + name).setView(layout).setPositiveButton("Add", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            EditText input = ((AlertDialog) dialog).findViewById(R.id.addInput);
-                            String text = input.getText().toString();
-                            if (text.length() > 0) {
-                                int num = Integer.parseInt(text);
-                                if (num > 0 && num < 1000) {
-                                    sendPut(id, name, num);
-                                } else {
-                                    toast("Amount must be between 1-999", Toast.LENGTH_LONG);
-                                }
-                            } else {
-                                toast("Amount must be between 1-999", Toast.LENGTH_LONG);
-                            }
+                            handlePut(text.getText().toString(), id, name);
                         }
                     }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                         @Override
@@ -148,6 +150,20 @@ public class ResultActivity extends AppCompatActivity {
                     dialog.show();
                     Objects.requireNonNull(dialog.getWindow()).setLayout(WRAP_CONTENT, WRAP_CONTENT);
 
+                    text.setOnKeyListener(new View.OnKeyListener() {
+                        @Override
+                        public boolean onKey(View v, int keyCode, KeyEvent event) {
+                            if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                                if (keyCode == KeyEvent.KEYCODE_ENTER) {
+                                    handlePut(text.getText().toString(), id, name);
+                                    dialog.cancel();
+                                    return true;
+                                }
+                            }
+                            return false;
+                        }
+                    });
+
                     return true;
                 }
             });
@@ -155,18 +171,31 @@ public class ResultActivity extends AppCompatActivity {
             return convertView;
         }
 
+        private void handlePut(String text, String id, String name) {
+            if (text.length() > 0) {
+                int num = Integer.parseInt(text);
+                if (num > 0 && num < 1000) {
+                    sendPut(id, name, num);
+                } else {
+                    toast("Amount must be between 1-999", Toast.LENGTH_LONG);
+                }
+            } else {
+                toast("Amount must be between 1-999", Toast.LENGTH_LONG);
+            }
+        }
+
         private void sendPut(String id, String name) {
             sendPut(id, name, 1);
         }
 
         private void sendPut(final String id, final String name, final int num) {
-            toast("Adding " + name);
+            toast("Adding " + num + " of " + name);
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     String result = new NetworkHandler(NetworkHandler.Command.AddCard, user + ":" + num + ":" + id).getString();
                     if (result.equals("Put Success")) {
-                        toast("Added " + name);
+                        toast("Added " + num + " of " + name);
                         finish();
                     } else {
                         Log.d(TAG, "Failed put");

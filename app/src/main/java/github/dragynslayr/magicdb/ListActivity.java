@@ -12,10 +12,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -216,37 +218,22 @@ public class ListActivity extends AppCompatActivity {
                 @Override
                 public boolean onLongClick(View v) {
                     View layout = View.inflate(getApplicationContext(), R.layout.dialog, null);
-                    EditText text = layout.findViewById(R.id.addInput);
+                    final EditText text = layout.findViewById(R.id.addInput);
                     text.setHint("1-" + card.quantity);
                     text.setHintTextColor(getColor(R.color.greenBG));
-                    AlertDialog dialog = new AlertDialog.Builder(ListActivity.this, R.style.Dialog).setTitle("Remove " + card.name).setView(layout).setPositiveButton("Remove", new DialogInterface.OnClickListener() {
+                    final InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    text.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            text.requestFocus();
+                            imm.showSoftInput(text, 0);
+                        }
+                    }, 100);
+
+                    final AlertDialog dialog = new AlertDialog.Builder(ListActivity.this, R.style.Dialog).setTitle("Remove " + card.name).setView(layout).setPositiveButton("Remove", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            EditText input = ((AlertDialog) dialog).findViewById(R.id.addInput);
-                            String text = input.getText().toString();
-                            String errorString = "Amount must be between 1-" + card.quantity;
-                            if (text.length() > 0) {
-                                final int num = Integer.parseInt(text);
-                                if (num > 0 && num <= card.quantity) {
-                                    toast("Removing " + card.name);
-                                    new Thread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            String result = new NetworkHandler(NetworkHandler.Command.RemoveCard, user + ":" + card.id + ":" + num).getString();
-                                            if (result.equals("Remove Success")) {
-                                                toast("Removed " + card.name);
-                                                listThread.start();
-                                            } else {
-                                                Log.d(TAG, "Failed remove");
-                                            }
-                                        }
-                                    }).start();
-                                } else {
-                                    toast(errorString, Toast.LENGTH_LONG);
-                                }
-                            } else {
-                                toast(errorString, Toast.LENGTH_LONG);
-                            }
+                            handleRemove(text.getText().toString(), card);
                         }
                     }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                         @Override
@@ -257,11 +244,51 @@ public class ListActivity extends AppCompatActivity {
                     dialog.show();
                     Objects.requireNonNull(dialog.getWindow()).setLayout(WRAP_CONTENT, WRAP_CONTENT);
 
+                    text.setOnKeyListener(new View.OnKeyListener() {
+                        @Override
+                        public boolean onKey(View v, int keyCode, KeyEvent event) {
+                            if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                                if (keyCode == KeyEvent.KEYCODE_ENTER) {
+                                    handleRemove(text.getText().toString(), card);
+                                    dialog.cancel();
+                                    return true;
+                                }
+                            }
+                            return false;
+                        }
+                    });
+
                     return true;
                 }
             });
 
             return convertView;
+        }
+
+        private void handleRemove(String text, final ListCard card) {
+            String errorString = "Amount must be between 1-" + card.quantity;
+            if (text.length() > 0) {
+                final int num = Integer.parseInt(text);
+                if (num > 0 && num <= card.quantity) {
+                    toast("Removing " + num + " of " + card.name);
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            String result = new NetworkHandler(NetworkHandler.Command.RemoveCard, user + ":" + card.id + ":" + num).getString();
+                            if (result.equals("Remove Success")) {
+                                toast("Removed " + num + " of " + card.name);
+                                listThread.start();
+                            } else {
+                                Log.d(TAG, "Failed remove");
+                            }
+                        }
+                    }).start();
+                } else {
+                    toast(errorString, Toast.LENGTH_LONG);
+                }
+            } else {
+                toast(errorString, Toast.LENGTH_LONG);
+            }
         }
 
         void sortAndUpdate() {
