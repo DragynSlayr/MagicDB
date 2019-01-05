@@ -34,6 +34,9 @@ public class ScanActivity extends AppCompatActivity {
     private static final String TAG = "MagicDB_Main";
     private static final int PERM_REQ_ID = 101;
 
+    private final float FPS = 2.0f;
+    private final long TIME_OUT = 1500;
+
     private CameraSource cameraSource;
     private SurfaceView cameraView;
     private Thread searchThread;
@@ -89,7 +92,7 @@ public class ScanActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    Thread.sleep(2500);
+                    Thread.sleep(TIME_OUT);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -144,7 +147,7 @@ public class ScanActivity extends AppCompatActivity {
                     .setFacing(CameraSource.CAMERA_FACING_BACK)
                     .setRequestedPreviewSize(1920, 1080)
                     .setAutoFocusEnabled(true)
-                    .setRequestedFps(2.0f)
+                    .setRequestedFps(FPS)
                     .build();
 
             cameraView.getHolder().addCallback(new SurfaceHolder.Callback() {
