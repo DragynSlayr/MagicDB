@@ -270,9 +270,80 @@ public class ListActivity extends AppCompatActivity {
         }
     }
 
+    class CardMana {
+
+        private int[] mana = new int[6];
+        private int x = 0, normal = 0;
+        private boolean isNone = false;
+
+        CardMana(String mcs) {
+            String[] manas = mcs.replace("}", " ").replace("{", "").split(" ");
+            for (String s : manas) {
+                try {
+                    normal += Integer.parseInt(s);
+                } catch (NumberFormatException nfe) {
+                    switch (s) {
+                        case "W":
+                            mana[0]++;
+                            break;
+                        case "U":
+                            mana[1]++;
+                            break;
+                        case "B":
+                            mana[2]++;
+                            break;
+                        case "R":
+                            mana[3]++;
+                            break;
+                        case "G":
+                            mana[4]++;
+                            break;
+                        case "C":
+                            mana[5]++;
+                            break;
+                        case "X":
+                            x++;
+                            break;
+                        default:
+                            isNone = true;
+                            break;
+                    }
+                }
+            }
+        }
+
+        int compare(CardMana other, ListCard a, ListCard b) {
+            int xDiff = x - other.x;
+            if (xDiff != 0) {
+                return xDiff;
+            }
+
+            int cmcDiff = a.cmc - b.cmc;
+            if (cmcDiff != 0) {
+                return cmcDiff;
+            }
+
+            int normalDiff = normal - other.normal;
+            if (normalDiff != 0) {
+                return normalDiff;
+            }
+
+            for (int i = mana.length - 1; i > -1; i--) {
+                int manaDiff = mana[i] - other.mana[i];
+                if (manaDiff != 0) {
+                    return manaDiff;
+                }
+            }
+
+            return a.compareName(b);
+        }
+    }
+
     class ListCard {
+
         String name, id, cost;
         int quantity, cmc;
+        CardMana mana;
 
         ListCard(String name, String id, String cost, int cmc, int quantity) {
             this.name = name;
@@ -280,6 +351,25 @@ public class ListActivity extends AppCompatActivity {
             this.cost = cost;
             this.cmc = cmc;
             this.quantity = quantity;
+            mana = new CardMana(cost);
+        }
+
+        int compareName(ListCard other) {
+            return name.compareTo(other.name);
+        }
+
+        int compareCost(ListCard other) {
+            int diff = cmc - other.cmc;
+            return (diff != 0) ? diff : compareName(other);
+        }
+
+        int compareColor(ListCard other) {
+            return mana.compare(other.mana, this, other);
+        }
+
+        int compareQuantity(ListCard other) {
+            int diff = quantity - other.quantity;
+            return (diff != 0) ? diff : compareName(other);
         }
     }
 
@@ -287,7 +377,7 @@ public class ListActivity extends AppCompatActivity {
 
         @Override
         public int compare(ListCard o1, ListCard o2) {
-            return o1.name.compareTo(o2.name);
+            return o1.compareName(o2);
         }
     }
 
@@ -295,25 +385,15 @@ public class ListActivity extends AppCompatActivity {
 
         @Override
         public int compare(ListCard o1, ListCard o2) {
-            int diff = o1.cmc - o2.cmc;
-            if (diff != 0) {
-                return diff;
-            } else {
-                return o1.name.compareTo(o2.name);
-            }
+            return o1.compareCost(o2);
         }
     }
 
     public class CardColorComparator implements Comparator<ListCard> {
 
         @Override
-        public int compare(ListCard o1, ListCard o2) { // TODO: Implement this
-            int diff = o1.quantity - o2.quantity;
-            if (diff != 0) {
-                return diff;
-            } else {
-                return o1.quantity - o2.quantity;
-            }
+        public int compare(ListCard o1, ListCard o2) {
+            return o1.compareColor(o2);
         }
     }
 
@@ -321,12 +401,7 @@ public class ListActivity extends AppCompatActivity {
 
         @Override
         public int compare(ListCard o1, ListCard o2) {
-            int diff = o1.quantity - o2.quantity;
-            if (diff != 0) {
-                return diff;
-            } else {
-                return o1.quantity - o2.quantity;
-            }
+            return o1.compareQuantity(o2);
         }
     }
 }
