@@ -21,7 +21,6 @@ import com.google.android.gms.vision.text.TextBlock;
 import com.google.android.gms.vision.text.TextRecognizer;
 
 import java.io.IOException;
-import java.text.Normalizer;
 import java.util.Objects;
 
 public class ScanActivity extends AppCompatActivity {
@@ -75,6 +74,7 @@ public class ScanActivity extends AppCompatActivity {
                     intent.putExtra(EXTRA_IDS, ids);
                     startActivity(intent);
                 } else {
+                    Log.d(TAG, "Found nothing for: " + scanned);
                     delayScan();
                 }
             }
@@ -135,7 +135,7 @@ public class ScanActivity extends AppCompatActivity {
     private boolean isValidCard(String card) {
         boolean isUpper = !card.toLowerCase().equals(card);
         boolean isLower = !card.toUpperCase().equals(card);
-        boolean isLong = card.length() >= 4;
+        boolean isLong = card.length() >= 2;
         return (isUpper && isLower && isLong);
     }
 
@@ -186,10 +186,9 @@ public class ScanActivity extends AppCompatActivity {
                     final SparseArray<TextBlock> items = detections.getDetectedItems();
                     if (scanning && items.size() != 0) {
                         scanned = items.valueAt(0).getValue();
-                        scanned = Normalizer.normalize(scanned, Normalizer.Form.NFD);
                         scanned = replaceAll(scanned).replaceAll("[^\\x00-\\x7F]", "").trim();
                         if (isValidCard(scanned)) {
-                            Log.d(TAG, "Found: " + scanned);
+                            Log.d(TAG, "Scanned: " + scanned);
                             searchThread.start();
                         }
                     }
