@@ -37,7 +37,7 @@ public class ScanActivity extends AppCompatActivity {
     private SurfaceView cameraView;
     private Thread searchThread;
     private boolean scanning;
-    private String scanned, user;
+    private String scanned, user, lastScanned;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,30 +52,37 @@ public class ScanActivity extends AppCompatActivity {
 
         delayScan();
         scanned = "";
+        lastScanned = "";
 
         cameraView = findViewById(R.id.surfaceView);
         searchThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 scanning = false;
-                String[] found = new NetworkHandler(NetworkHandler.Command.Search, scanned).getStringArray();
-                String[] cards = new String[found.length];
-                String[] ids = new String[found.length];
-                for (int i = 0; i < found.length; i++) {
-                    String[] parts = found[i].split("\t");
-                    ids[i] = parts[0];
-                    cards[i] = parts[1];
-                }
-                if (found.length > 0) {
-                    Intent intent = new Intent(getApplicationContext(), ResultActivity.class);
-                    intent.putExtra(EXTRA_SCANNED, scanned);
-                    intent.putExtra(EXTRA_USER_NAME, user);
-                    intent.putExtra(EXTRA_CARDS, cards);
-                    intent.putExtra(EXTRA_IDS, ids);
-                    startActivity(intent);
-                } else {
-                    Log.d(TAG, "Found nothing for: " + scanned);
+                if (scanned.equals(lastScanned)) {
+                    lastScanned = "";
                     delayScan();
+                } else {
+                    String[] found = new NetworkHandler(NetworkHandler.Command.Search, scanned).getStringArray();
+                    String[] cards = new String[found.length];
+                    String[] ids = new String[found.length];
+                    for (int i = 0; i < found.length; i++) {
+                        String[] parts = found[i].split("\t");
+                        ids[i] = parts[0];
+                        cards[i] = parts[1];
+                    }
+                    lastScanned = scanned;
+                    if (found.length > 0) {
+                        Intent intent = new Intent(getApplicationContext(), ResultActivity.class);
+                        intent.putExtra(EXTRA_SCANNED, scanned);
+                        intent.putExtra(EXTRA_USER_NAME, user);
+                        intent.putExtra(EXTRA_CARDS, cards);
+                        intent.putExtra(EXTRA_IDS, ids);
+                        startActivity(intent);
+                    } else {
+                        Log.d(TAG, "Found nothing for: " + scanned);
+                        delayScan();
+                    }
                 }
             }
         });
@@ -93,6 +100,7 @@ public class ScanActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
                 scanning = true;
+                scanned = "";
             }
         }).start();
     }

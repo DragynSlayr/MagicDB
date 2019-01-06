@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/whiteBG"
     android:orientation="vertical"
+    android:weightSum="6"
     tools:context=".ListActivity">
 
     <LinearLayout
+        android:id="@+id/listLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:weightSum="5">
@@ -33,21 +36,32 @@
     <ListView
         android:id="@+id/cardList"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_marginStart="5dp"
         android:layout_marginTop="10dp"
         android:layout_marginEnd="5dp"
         android:dividerHeight="4dp"
-        android:scrollbars="vertical" />
+        android:scrollbars="vertical"
+        app:layout_constraintBottom_toTopOf="@id/cardCount"
+        app:layout_constraintTop_toBottomOf="@id/listLayout" />
+
+    <TextView
+        android:id="@+id/cardCount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAlignment="center"
+        android:textSize="24sp"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
     <TextView
         android:id="@+id/error"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:background="@color/whiteBG"
         android:text="@string/listError"
         android:textAlignment="center"
         android:textSize="32sp"
-        android:visibility="gone" />
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/listLayout" />
 
-</LinearLayout>
+</android.support.constraint.ConstraintLayout>

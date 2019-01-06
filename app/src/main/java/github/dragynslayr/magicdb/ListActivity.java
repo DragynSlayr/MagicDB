@@ -53,7 +53,7 @@ public class ListActivity extends AppCompatActivity {
         Intent intent = getIntent();
         user = intent.getStringExtra(MainActivity.EXTRA_USER_NAME);
 
-        EditText searchBox = findViewById(R.id.searchBox);
+        final EditText searchBox = findViewById(R.id.searchBox);
         final ListView cardsHolder = findViewById(R.id.cardList);
 
         spinner = findViewById(R.id.spinner);
@@ -113,6 +113,8 @@ public class ListActivity extends AppCompatActivity {
                             errorText.setVisibility(View.VISIBLE);
                             cardsHolder.setVisibility(View.GONE);
                         }
+
+                        filterCards(searchBox.getText().toString().toLowerCase(), cardsHolder);
                     }
                 });
             }
@@ -120,20 +122,33 @@ public class ListActivity extends AppCompatActivity {
         listThread.start();
     }
 
+    @SuppressLint("SetTextI18n")
     private void filterCards(String filter, ListView cardsHolder) {
         ListCardAdapter cardAdapter = (ListCardAdapter) cardsHolder.getAdapter();
+        TextView countText = findViewById(R.id.cardCount);
+        int visible = 0, total = 0;
+        for (ListCard card : allCards) {
+            total += card.quantity;
+        }
         if (filter.length() > 0) {
             ArrayList<ListCard> cards = new ArrayList<>();
             for (ListCard card : allCards) {
                 if (card.name.toLowerCase().contains(filter)) {
                     cards.add(card);
+                    visible += card.quantity;
                 }
             }
             cardAdapter.clear();
             cardAdapter.addAll(cards);
         } else {
+            visible = total;
             cardAdapter.clear();
             cardAdapter.addAll(allCards);
+        }
+        if (visible == total) {
+            countText.setText("All " + total + " cards found");
+        } else {
+            countText.setText(visible + "/" + total + " cards visible");
         }
         cardAdapter.sortAndUpdate();
         TextView errorText = findViewById(R.id.error);
@@ -340,6 +355,13 @@ public class ListActivity extends AppCompatActivity {
         }
 
         int compare(CardMana other, ListCard a, ListCard b) {
+            for (int i = mana.length - 1; i > -1; i--) {
+                int manaDiff = mana[i] - other.mana[i];
+                if (manaDiff != 0) {
+                    return manaDiff;
+                }
+            }
+
             int xDiff = x - other.x;
             if (xDiff != 0) {
                 return xDiff;
@@ -353,13 +375,6 @@ public class ListActivity extends AppCompatActivity {
             int normalDiff = normal - other.normal;
             if (normalDiff != 0) {
                 return normalDiff;
-            }
-
-            for (int i = mana.length - 1; i > -1; i--) {
-                int manaDiff = mana[i] - other.mana[i];
-                if (manaDiff != 0) {
-                    return manaDiff;
-                }
             }
 
             return a.compareName(b);
