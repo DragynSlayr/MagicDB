@@ -38,6 +38,7 @@ public class ScanActivity extends AppCompatActivity {
     private Thread searchThread;
     private boolean scanning;
     private String scanned, user, lastScanned;
+    private Overlay overlay;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +50,8 @@ public class ScanActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         user = intent.getStringExtra(MainActivity.EXTRA_USER_NAME);
+
+        overlay = findViewById(R.id.overlay);
 
         delayScan();
         scanned = "";
@@ -91,6 +94,7 @@ public class ScanActivity extends AppCompatActivity {
     }
 
     private void delayScan() {
+        resetOverlay();
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -197,7 +201,10 @@ public class ScanActivity extends AppCompatActivity {
                         scanned = replaceAll(scanned).replaceAll("[^\\x00-\\x7F]", "").trim();
                         if (isValidCard(scanned)) {
                             Log.d(TAG, "Scanned: " + scanned);
+                            updateOverlay();
                             searchThread.start();
+                        } else {
+                            resetOverlay();
                         }
                     }
                 }
@@ -206,10 +213,28 @@ public class ScanActivity extends AppCompatActivity {
     }
 
     private String replaceAll(String s) {
-        char[] chars = new char[]{'(', ')', ':', '\n', '\r', '\t'};
+        char[] chars = new char[]{'(', ')', ':', '|', '\n', '\r', '\t'};
         for (char c : chars) {
             s = s.replace(c + "", "");
         }
         return s;
+    }
+
+    private void updateOverlay() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                overlay.update(scanned);
+            }
+        });
+    }
+
+    private void resetOverlay() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                overlay.reset();
+            }
+        });
     }
 }
