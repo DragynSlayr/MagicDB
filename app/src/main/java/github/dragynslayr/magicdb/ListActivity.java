@@ -21,12 +21,15 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Objects;
 
@@ -219,15 +222,23 @@ public class ListActivity extends AppCompatActivity {
 
             TextView nameText = convertView.findViewById(R.id.cardName);
             TextView quantityText = convertView.findViewById(R.id.cardQuantity);
-            TextView costText = convertView.findViewById(R.id.cardCost);
             TextView idText = convertView.findViewById(R.id.cardId);
             TextView cmcText = convertView.findViewById(R.id.cardCMC);
+            LinearLayout costLayout = convertView.findViewById(R.id.cardCost);
 
             nameText.setText(card.name);
             quantityText.setText("x" + card.quantity);
-            costText.setText(card.cost);
             idText.setText(card.id);
             cmcText.setText(card.cmc + "");
+
+            costLayout.removeAllViews();
+            for (String s : card.costs) {
+                ImageView iv = new ImageView(getContext());
+                String name = "ic_" + s.replaceAll("[^\\x00-\\x7F]", "").toLowerCase();
+                iv.setImageResource(getResources().getIdentifier(name, "drawable", getPackageName()));
+                iv.setLayoutParams(new LinearLayout.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT, 1.0f));
+                costLayout.addView(iv);
+            }
 
             convertView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
@@ -382,6 +393,7 @@ public class ListActivity extends AppCompatActivity {
         String name, id, cost;
         int quantity, cmc;
         CardMana mana;
+        ArrayList<String> costs;
 
         ListCard(String name, String id, String cost, int cmc, int quantity) {
             this.name = name;
@@ -390,6 +402,16 @@ public class ListActivity extends AppCompatActivity {
             this.cmc = cmc;
             this.quantity = quantity;
             mana = new CardMana(cost);
+            parseCost(cost);
+        }
+
+        void parseCost(String cost) {
+            String[] manas = cost.replace("}", " ").replace("{", "").split(" ");
+            for (int i = 0; i < manas.length; i++) {
+                manas[i] = manas[i].replace("/", "");
+            }
+            costs = new ArrayList<>(manas.length);
+            Collections.addAll(costs, manas);
         }
 
         int compareName(ListCard other) {
