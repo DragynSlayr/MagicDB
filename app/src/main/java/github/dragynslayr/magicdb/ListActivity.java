@@ -316,7 +316,6 @@ public class ListActivity extends AppCompatActivity {
 
         private int[] mana = new int[6];
         private int x = 0, normal = 0;
-        private boolean isNone = false;
 
         CardMana(String mcs) {
             String[] manas = mcs.replace("}", " ").replace("{", "").split(" ");
@@ -345,9 +344,6 @@ public class ListActivity extends AppCompatActivity {
                             break;
                         case "X":
                             x++;
-                            break;
-                        default:
-                            isNone = true;
                             break;
                     }
                 }
