@@ -224,7 +224,7 @@ public class ListActivity extends AppCompatActivity {
             TextView cmcText = convertView.findViewById(R.id.cardCMC);
 
             nameText.setText(card.name);
-            quantityText.setText(card.quantity + "");
+            quantityText.setText("x" + card.quantity);
             costText.setText(card.cost);
             idText.setText(card.id);
             cmcText.setText(card.cmc + "");
@@ -241,7 +241,7 @@ public class ListActivity extends AppCompatActivity {
                         @Override
                         public void run() {
                             text.requestFocus();
-                            imm.showSoftInput(text, 0);
+                            Objects.requireNonNull(imm).showSoftInput(text, 0);
                         }
                     }, 100);
 
