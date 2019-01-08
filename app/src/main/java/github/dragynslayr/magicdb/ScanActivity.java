@@ -147,7 +147,7 @@ public class ScanActivity extends AppCompatActivity {
     private boolean isValidCard(String card) {
         boolean isUpper = !card.toLowerCase().equals(card);
         boolean isLower = !card.toUpperCase().equals(card);
-        boolean isLong = card.length() >= 2;
+        boolean isLong = card.length() >= 3;
         return (isUpper && isLower && isLong);
     }
 

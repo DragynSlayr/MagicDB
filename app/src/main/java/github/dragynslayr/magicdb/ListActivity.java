@@ -168,7 +168,7 @@ public class ListActivity extends AppCompatActivity {
         ArrayList<ListCard> cards = new ArrayList<>(found.length);
         for (String s : found) {
             String[] parts = s.split("\t");
-            ListCard card = new ListCard(parts[1], parts[0], parts[3], Integer.parseInt(parts[2]), Integer.parseInt(parts[4]));
+            ListCard card = new ListCard(parts[1], parts[0], parts[3], Float.parseFloat(parts[2]), Integer.parseInt(parts[4]));
             cards.add(card);
         }
         return cards;
@@ -239,6 +239,13 @@ public class ListActivity extends AppCompatActivity {
                 iv.setLayoutParams(new LinearLayout.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT, 1.0f));
                 costLayout.addView(iv);
             }
+
+            convertView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.d(TAG, "ID: " + card.id);
+                }
+            });
 
             convertView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
@@ -374,9 +381,9 @@ public class ListActivity extends AppCompatActivity {
                 return xDiff;
             }
 
-            int cmcDiff = a.cmc - b.cmc;
+            float cmcDiff = a.cmc - b.cmc;
             if (cmcDiff != 0) {
-                return cmcDiff;
+                return (int) cmcDiff;
             }
 
             int normalDiff = normal - other.normal;
@@ -391,11 +398,12 @@ public class ListActivity extends AppCompatActivity {
     class ListCard {
 
         String name, id, cost;
-        int quantity, cmc;
+        int quantity;
+        float cmc;
         CardMana mana;
         ArrayList<String> costs;
 
-        ListCard(String name, String id, String cost, int cmc, int quantity) {
+        ListCard(String name, String id, String cost, float cmc, int quantity) {
             this.name = name;
             this.id = id;
             this.cost = cost;
@@ -419,8 +427,8 @@ public class ListActivity extends AppCompatActivity {
         }
 
         int compareCost(ListCard other) {
-            int diff = cmc - other.cmc;
-            return (diff != 0) ? diff : compareName(other);
+            float diff = cmc - other.cmc;
+            return (diff != 0) ? (int) diff : compareName(other);
         }
 
         int compareColor(ListCard other) {

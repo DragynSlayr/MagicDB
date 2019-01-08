@@ -10,7 +10,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -101,74 +100,63 @@ public class ResultActivity extends AppCompatActivity {
                 @SuppressLint("SetTextI18n")
                 @Override
                 public void onClick(View v) {
-                    TextView text = new TextView(getContext());
-                    text.setText("Would you like to add " + name + "?");
-                    text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 22.0f);
-                    text.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-                    text.setTextColor(getColor(R.color.greenBG));
-                    AlertDialog dialog = new AlertDialog.Builder(getContext(), R.style.Dialog).setTitle("Add " + name).setView(text).setPositiveButton("Add", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            sendPut(id, name);
-                        }
-                    }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.cancel();
-                        }
-                    }).create();
-                    dialog.show();
-                    Objects.requireNonNull(dialog.getWindow()).setLayout(WRAP_CONTENT, WRAP_CONTENT);
+                    showDialog(id, name, true);
                 }
             });
 
             convertView.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
-                    View layout = View.inflate(getApplicationContext(), R.layout.dialog, null);
-                    final EditText text = layout.findViewById(R.id.addInput);
-                    final InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                    text.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            text.requestFocus();
-                            imm.showSoftInput(text, 0);
-                        }
-                    }, 100);
-
-                    final AlertDialog dialog = new AlertDialog.Builder(getContext(), R.style.Dialog).setTitle("Add " + name).setView(layout).setPositiveButton("Add", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            handlePut(text.getText().toString(), id, name);
-                        }
-                    }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.cancel();
-                        }
-                    }).create();
-                    dialog.show();
-                    Objects.requireNonNull(dialog.getWindow()).setLayout(WRAP_CONTENT, WRAP_CONTENT);
-
-                    text.setOnKeyListener(new View.OnKeyListener() {
-                        @Override
-                        public boolean onKey(View v, int keyCode, KeyEvent event) {
-                            if (event.getAction() == KeyEvent.ACTION_DOWN) {
-                                if (keyCode == KeyEvent.KEYCODE_ENTER) {
-                                    handlePut(text.getText().toString(), id, name);
-                                    dialog.cancel();
-                                    return true;
-                                }
-                            }
-                            return false;
-                        }
-                    });
-
+                    showDialog(id, name, false);
                     return true;
                 }
             });
 
             return convertView;
+        }
+
+        private void showDialog(final String id, final String name, boolean autoFill) {
+            View layout = View.inflate(getApplicationContext(), R.layout.dialog, null);
+            final EditText text = layout.findViewById(R.id.addInput);
+            if (autoFill) {
+                text.setText("1");
+            }
+            final InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            text.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    text.requestFocus();
+                    Objects.requireNonNull(imm).showSoftInput(text, 0);
+                }
+            }, 100);
+
+            final AlertDialog dialog = new AlertDialog.Builder(getContext(), R.style.Dialog).setTitle("Add " + name).setView(layout).setPositiveButton("Add", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    handlePut(text.getText().toString(), id, name);
+                }
+            }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.cancel();
+                }
+            }).create();
+            dialog.show();
+            Objects.requireNonNull(dialog.getWindow()).setLayout(WRAP_CONTENT, WRAP_CONTENT);
+
+            text.setOnKeyListener(new View.OnKeyListener() {
+                @Override
+                public boolean onKey(View v, int keyCode, KeyEvent event) {
+                    if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                        if (keyCode == KeyEvent.KEYCODE_ENTER) {
+                            handlePut(text.getText().toString(), id, name);
+                            dialog.cancel();
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+            });
         }
 
         private void handlePut(String text, String id, String name) {
@@ -182,10 +170,6 @@ public class ResultActivity extends AppCompatActivity {
             } else {
                 toast("Amount must be between 1-999", Toast.LENGTH_LONG);
             }
-        }
-
-        private void sendPut(String id, String name) {
-            sendPut(id, name, 1);
         }
 
         private void sendPut(final String id, final String name, final int num) {
